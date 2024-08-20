@@ -1,4 +1,9 @@
-// イメージサイズは766x541
+/**
+ * デバッグモードフラグ
+ * 
+ * デバッグモード時は以下の様になる。
+ * 1. イメージにタッチエリア表示
+ */ 
 let DebugMode = true;
 
 //
@@ -16,6 +21,24 @@ class ShowImageCommand extends Command {
 
   tick() {
     image(this.image, 1, 1, 766, 541);
+/* TODO: これ有効にすると動かない。多分バグがあるから
+    if (DebugMode == true) {
+      for (i = 0; i < 541; i += 10) {
+        for (j = 0; j < 766; j += 10) {
+
+          // 背景
+          colorMode(RGB, 256);
+
+          //noStroke(); // 線なし
+          stroke(0, 0, 0); // 線の色
+          strokeWeight(10);  // 線の太さ
+
+          fill(0, 0, 0); // 塗りつぶしの色
+          rect(1 + j, 1 + i, 10, 10);
+        }
+      }
+    }
+*/
   }
 }
 
@@ -434,9 +457,11 @@ function myMousePressed() {
   // mousePressed()だとなせかiphoneで動かないときがあるのでこうした
   CommandPanel.instance.updateSelectedButton();
 }
+
 function start0() { // setup()から呼ばれるので描画系のメソッドが使えない
   status = 0;  
 }
+
 function start1() {
   CommandController.instance.add(new CommandPanelClearCommand());
   CommandController.instance.add(new ShowImageCommand(p0Image));
