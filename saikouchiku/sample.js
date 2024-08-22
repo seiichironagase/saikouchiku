@@ -5,6 +5,7 @@
  * 1. イメージにタッチエリア表示
  */ 
 let DebugMode = true;
+let LocalMode = true;
 
 //
 // --- Command ---
@@ -13,35 +14,43 @@ class Command {
   tick() {}
 }
 
-class ShowImageCommand extends Command {
-  constructor(imageParam) {
+class ImagePanelSetAndShowImage extends Command {
+  constructor(imageParam, buttonValues) {
     super();
-    this.image = imageParam;
+    //this.image = imageParam;
+    ImagePanel.instance.image = imageParam;
+    ImagePanel.instance.buttonValues = buttonValues;
+    ImagePanel.instance.selectedButton = -1;
   }
 
   tick() {
-    image(this.image, 1, 1, 766, 541);
-/* TODO: これ有効にすると動かない。多分バグがあるから
+    ImagePanel.instance.print();
+    /*
+    if (LocalMode == false) {
+      image(this.image, 1, 1, 766, 541);
+    }
+
     if (DebugMode == true) {
-      for (i = 0; i < 541; i += 10) {
-        for (j = 0; j < 766; j += 10) {
+      let touchSize = 766 / 10;
+      for (let i = 0; i < 541; i += touchSize) {
+        for (let j = 0; j < 766; j += touchSize) {
 
           // 背景
           colorMode(RGB, 256);
 
           //noStroke(); // 線なし
-          stroke(0, 0, 0); // 線の色
-          strokeWeight(10);  // 線の太さ
+          stroke(100, 100, 100); // 線の色
+          strokeWeight(3);  // 線の太さ
 
           fill(0, 0, 0); // 塗りつぶしの色
-          rect(1 + j, 1 + i, 10, 10);
+          rect(1 + j, 1 + i, touchSize, touchSize);
         }
       }
     }
-*/
+    */
   }
 }
-
+  
 class ConsolePanelCearCommand extends Command {
   constructor() {
     super();
@@ -168,6 +177,68 @@ class Button {
     this.width = widthParam;
     this.height = heightParam;
     this.message = message;
+  }
+}
+
+//
+// --- ImagePanel ---
+//
+
+class ImagePanel {
+
+  static instance = new ImagePanel();
+  image = null;
+  buttonValues = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  ];
+
+  selectedButton = -1;
+
+  constructor() {
+    this.image = null;
+    this.selectedButton = -1;
+    this.buttonValues = [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ];
+  }
+
+  print() {
+    if (LocalMode == false) {
+      image(this.image, 1, 1, 766, 541);
+    }
+
+    if (DebugMode == true) {
+      let touchSize = 766 / 10;
+      for (let i = 0; i < 541; i += touchSize) {
+        for (let j = 0; j < 766; j += touchSize) {
+
+          // 背景
+          colorMode(RGB, 256);
+
+          //noStroke(); // 線なし
+          stroke(100, 100, 100); // 線の色
+          strokeWeight(3);  // 線の太さ
+
+          fill(0, 0, 0); // 塗りつぶしの色
+          rect(1 + j, 1 + i, touchSize, touchSize);
+          //fillStyle = 'rgb(0, 0, 255)'; テキストどーやって表示すんだろ
+          //fillText("a", 1+j, 1+i);
+          //fillText("a", 100, 100);
+        }
+      }
+    }
   }
 }
 
@@ -334,6 +405,8 @@ class CommandPanel {
   }
 
   updateSelectedButton() {
+
+    // ボタンが押された事の判定
     for (let i = 0; i < this.buttons.length; i++) {
       if (
         this.x * myScale + this.buttons[i].x * myScale < mouseX &&
@@ -349,6 +422,25 @@ class CommandPanel {
       ) {
         this.selectedButton = i;
         break;
+      }
+    }
+
+    // 画面が押された事の判定
+    if (DebugMode == true) {
+      let touchSize = 766 / 10;
+      for (let i = 0; i < 541; i += touchSize) {
+        for (let j = 0; j < 766; j += touchSize) {
+
+          // 背景
+          colorMode(RGB, 256);
+
+          //noStroke(); // 線なし
+          stroke(100, 100, 100); // 線の色
+          strokeWeight(3);  // 線の太さ
+
+          fill(0, 0, 0); // 塗りつぶしの色
+          rect(1 + j, 1 + i, touchSize, touchSize);
+        }
       }
     }
   }
@@ -371,10 +463,12 @@ let p3Image = null;
 let myScale = 1.0; // scaleという名前だと怒られた・・
 
 function preload() {
-  p0Image = loadImage("0.PNG");
-  p1Image = loadImage("1.PNG");
-  p2Image = loadImage("2.PNG");
-  p3Image = loadImage("3.PNG");
+  if (LocalMode == false) {
+    p0Image = loadImage("0.PNG");
+    p1Image = loadImage("1.PNG");
+    p2Image = loadImage("2.PNG");
+    p3Image = loadImage("3.PNG");  
+  }
 }
 
 function setup() {
@@ -464,7 +558,13 @@ function start0() { // setup()から呼ばれるので描画系のメソッド�
 
 function start1() {
   CommandController.instance.add(new CommandPanelClearCommand());
-  CommandController.instance.add(new ShowImageCommand(p0Image));
+  CommandController.instance.add(new ImagePanelSetAndShowImage(p0Image, [  0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+                                                                  0, 0, 0, 1, 0, 2, 0, 0, 0, 0,
+                                                                  0, 0, 1, 0, 0, 0, 2, 0, 0, 0,
+                                                                  0, 1, 0, 0, 0, 0, 0, 2, 0, 0,
+                                                                  1, 0, 0, 0, 0, 0, 0, 0, 2, 0,
+                                                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+                                                                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]));
   CommandController.instance.add(new ConsolePanelCearCommand());
   CommandController.instance.add(
     CommandUtility.getConsoleAddCharsFromTextCommand("天国と地獄")
@@ -484,7 +584,7 @@ function start1() {
 
 function start2() {
   CommandController.instance.add(new CommandPanelClearCommand());
-  CommandController.instance.add(new ShowImageCommand(p1Image));
+  CommandController.instance.add(new ImagePanelSetAndShowImage(p1Image, 0));
   CommandController.instance.add(new ConsolePanelCearCommand());
   CommandController.instance.add(
     CommandUtility.getConsoleAddCharsFromTextCommand(
@@ -508,7 +608,7 @@ function start2() {
 
 function start3() {
   CommandController.instance.add(new CommandPanelClearCommand());
-  CommandController.instance.add(new ShowImageCommand(p2Image));
+  CommandController.instance.add(new ImagePanelSetAndShowImage(p2Image, 0));
   CommandController.instance.add(new ConsolePanelCearCommand());
   CommandController.instance.add(
     CommandUtility.getConsoleAddCharsFromTextCommand("スペースで癒されました!")
@@ -527,7 +627,7 @@ function start3() {
 
 function start4() {
   CommandController.instance.add(new CommandPanelClearCommand());
-  CommandController.instance.add(new ShowImageCommand(p3Image));
+  CommandController.instance.add(new ImagePanelSetAndShowImage(p3Image, 0));
   CommandController.instance.add(new ConsolePanelCearCommand());
   CommandController.instance.add(
     CommandUtility.getConsoleAddCharsFromTextCommand("地獄に落ちました")
